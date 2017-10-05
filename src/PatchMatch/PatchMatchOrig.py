@@ -76,9 +76,12 @@ class PatchMatch(object):
             while dx<= self.patch_size//2:
                 if (ay + dy) < a_rows and (ay + dy) >= 0 and (ax + dx) < a_cols and (ax + dx) >= 0:
                     if (by + dy) < b_rows and (by + dy) >= 0 and (bx + dx) < b_cols and (bx + dx) >= 0:
-                        for channel in range(self.A.shape[2]):
-                            dd = int(int(self.A[ay + dy][ax + dx][channel]) - int(self.B[by + dy][bx + dx][channel]))
-                            ans += (int(int(dd*dd)))
+                        ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
+
+
+                        # for channel in range(self.A.shape[2]):
+                            # dd = self.A[ay + dy][ax + dx][channel] - self.B[by + dy][bx + dx][channel]
+                            # ans += dd*dd
                         num += 1
                 dx +=1
             dy+=1
@@ -233,17 +236,17 @@ class PatchMatch(object):
                             ymax = min(ybest + rand_d, b_rows)
                             
                             if xmin > xmax:
-                                rx =-np.random.randint(xmax, xmin)
+                                rx =np.random.randint(xmax, xmin)
                             if ymin > ymax:
-                                ry = -np.random.randint(ymax, ymin)
+                                ry = np.random.randint(ymax, ymin)
 
                             if xmin < xmax and ymin < ymax:
                                 rx = np.random.randint(xmin, xmax)
                                 ry = np.random.randint(ymin, ymax)
 
-                                val = self.cal_dist(ay, ax ,ry, rx)
-                                if val < dbest:
-                                    xbest, ybest, dbest = rx, ry, val
+                            val = self.cal_dist(ay, ax ,ry, rx)
+                            if val < dbest:
+                                xbest, ybest, dbest = rx, ry, val
                                 
                         except Exception as e:
                             print(e)
@@ -260,8 +263,8 @@ class PatchMatch(object):
                   
                     ax+=xchange
                 ay+=ychange
-                print("done iteration")
-            
+            print("done iteration")
+        
 
                 
         print("Done")
