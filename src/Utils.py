@@ -52,3 +52,4 @@ def reconstruct_image(img_a, img_b, scale, size, pm):
             x, y = pm.nnf[i, j]
             if final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)].shape == img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)].shape:
                 final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)] = img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)]
+    return final_img
