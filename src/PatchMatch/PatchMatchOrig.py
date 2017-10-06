@@ -3,7 +3,6 @@ The Patchmatch Algorithm
 
 """
 
-import pdb
 import numpy as np
 from numpy.lib import stride_tricks
 import cv2
@@ -44,25 +43,37 @@ class PatchMatch(object):
         :param bx: x coordinate of the patch in B
         :return:
         """
-        dist, num_valid_pts, patch_rad = 0, 0, self.patch_size // 2
-        a_rows, a_cols, _ = self.A.shape
-        b_rows, b_cols, _ = self.A.shape
+        ans = 0
+        num = 0
+        a_rows = self.A.shape[0]
+        a_cols = self.A.shape[1]
 
-        for dy in range(-patch_rad, patch_rad):
-            for dx in range(-patch_rad, patch_rad):
-                ay_prime, ax_prime, by_prime, bx_prime = ay+dy, ax+dx, by+dy, bx+dx
-                if 0 <= ay_prime < a_rows and 0 <= ax_prime < a_cols and 0 <= by_prime < b_rows and 0 <= bx_prime < b_cols:
-                    point1 = self.A[ay_prime][ax_prime].astype(int) 
-                    point2 = self.B[by_prime][bx_prime].astype(int)
-                    dist += np.sum(np.power(point1 - point2, 2))
-                num_valid_pts += 1
+        b_rows = self.A.shape[0]
+        b_cols = self.A.shape[1]
+
+        dy = -self.patch_size // 2
+        while dy <= self.patch_size // 2:
+
+            dx = -self.patch_size // 2
+            while dx <= self.patch_size // 2:
+                if (ay + dy) < a_rows and (ay + dy) >= 0 and (ax + dx) < a_cols and (ax + dx) >= 0:
+                    if (by + dy) < b_rows and (by + dy) >= 0 and (bx + dx) < b_cols and (bx + dx) >= 0:
+                        ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
+                        # for channel in range(self.A.shape[2]):
+                            # dd = int(self.A[ay + dy][ax + dx][channel]) - int(self.B[by + dy][bx + dx][channel])
+                            # ans += int(dd * dd)
+                        num += 1
+                dx += 1
+            dy += 1
         try:
-            dist = dist / num_valid_pts
+            ans = ans / num
         except Exception as e:
             print(e)
-            print(ax, ay, bx, by)
-
-        return dist
+            print(ax)
+            print(ay)
+            print(bx)
+            print(by)
+        return ans
 
     def reconstruct(self):
         """
@@ -113,8 +124,8 @@ class PatchMatch(object):
 
         img = np.zeros((nnf.shape[0], nnf.shape[1], 3), dtype=np.uint8)
 
-        for i in range(1, nnf.shape[0]):
-            for j in range(1, nnf.shape[1]):
+        for i in range( nnf.shape[0]):
+            for j in range( nnf.shape[1]):
                 pos = nnf[i, j]
                 img[i, j, 0] = int(255 * (pos[0] / self.B.shape[1]))
                 img[i, j, 1] = int(255 * (pos[1] / self.B.shape[0]))
@@ -199,9 +210,9 @@ class PatchMatch(object):
                             ymax = min(ybest + rand_d, b_rows)
 
                             if xmin > xmax:
-                                rx = np.random.randint(xmax, xmin)
+                                rx = -np.random.randint(xmax, xmin)
                             if ymin > ymax:
-                                ry = np.random.randint(ymax, ymin)
+                                ry = -np.random.randint(ymax, ymin)
 
                             if xmin < xmax and ymin < ymax:
                                 rx = np.random.randint(xmin, xmax)

@@ -38,7 +38,7 @@ def deprocess_image(tensor, is_th_variable=False, is_th_tensor=False, un_normali
 
 
 def get_viz_tensor(activations_tensor):
-    reshaped_tensor = activations_tensor.view(-1, 1, activations_tensor.size()[1], activations_tensor.size()[2])
+    reshaped_tensor = activations_tensor.contiguous().view(-1, 1, activations_tensor.size()[0], activations_tensor.size()[1])
     grid = make_grid(reshaped_tensor).numpy()
     grid = np.transpose(grid, (1, 2, 0))
     return grid
