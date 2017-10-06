@@ -66,8 +66,6 @@ class VGG19:
                 batn_counter += 1
                 self.model.add_layer(name, layer)  # ***
 
-
-
     def get_features_for_layer(self, img_tensor, layer_num):
 
         feature = self.model(img_tensor)[layer_num].data

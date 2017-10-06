@@ -42,3 +42,13 @@ def get_viz_tensor(activations_tensor):
     grid = make_grid(reshaped_tensor).numpy()
     grid = np.transpose(grid, (1, 2, 0))
     return grid
+
+
+def reconstruct_image(img_a, img_b, scale, size, pm):
+    final_img = np.zeros_like(img_b)
+
+    for i in range(size):
+        for j in range(size):
+            x, y = pm.nnf[i, j]
+            if final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)].shape == img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)].shape:
+                final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)] = img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)]
