@@ -1,6 +1,8 @@
 from torchvision import transforms
 from PIL import Image
 from torch.autograd import Variable
+from torchvision.utils import make_grid
+import numpy as np
 
 
 def load_image(img_path, to_array=False, to_variable=False):
@@ -33,3 +35,10 @@ def deprocess_image(tensor, is_th_variable=False, is_th_tensor=False, un_normali
         img[:, :, 1] = (img[:, :, 1] * .224 + .456)
         img[:, :, 2] = (img[:, :, 2] * .225 + .406)
     return img
+
+
+def get_viz_tensor(activations_tensor):
+    reshaped_tensor = activations_tensor.view(-1, 1, activations_tensor.size()[1], activations_tensor.size()[2])
+    grid = make_grid(reshaped_tensor).numpy()
+    grid = np.transpose(grid, (1, 2, 0))
+    return grid
