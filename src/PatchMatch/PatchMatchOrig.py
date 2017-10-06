@@ -3,6 +3,7 @@ The Patchmatch Algorithm
 
 """
 
+import pdb
 import numpy as np
 from numpy.lib import stride_tricks
 import cv2
@@ -43,37 +44,25 @@ class PatchMatch(object):
         :param bx: x coordinate of the patch in B
         :return:
         """
-        ans = 0
-        num = 0
-        a_rows = self.A.shape[0]
-        a_cols = self.A.shape[1]
+        dist, num_valid_pts, patch_rad = 0, 0, self.patch_size // 2
+        a_rows, a_cols, _ = self.A.shape
+        b_rows, b_cols, _ = self.A.shape
 
-        b_rows = self.A.shape[0]
-        b_cols = self.A.shape[1]
-
-        dy = -self.patch_size // 2
-        while dy <= self.patch_size // 2:
-
-            dx = -self.patch_size // 2
-            while dx <= self.patch_size // 2:
-                if (ay + dy) < a_rows and (ay + dy) >= 0 and (ax + dx) < a_cols and (ax + dx) >= 0:
-                    if (by + dy) < b_rows and (by + dy) >= 0 and (bx + dx) < b_cols and (bx + dx) >= 0:
-                        # ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
-                        for channel in range(self.A.shape[2]):
-                            dd = self.A[ay + dy][ax + dx][channel] - self.B[by + dy][bx + dx][channel]
-                            ans += dd * dd
-                        num += 1
-                dx += 1
-            dy += 1
+        for dy in range(-patch_rad, patch_rad):
+            for dx in range(-patch_rad, patch_rad):
+                ay_prime, ax_prime, by_prime, bx_prime = ay+dy, ax+dx, by+dy, bx+dx
+                if 0 <= ay_prime < a_rows and 0 <= ax_prime < a_cols and 0 <= by_prime < b_rows and 0 <= bx_prime < b_cols:
+                    point1 = self.A[ay_prime][ax_prime].astype(int) 
+                    point2 = self.B[by_prime][bx_prime].astype(int)
+                    dist += np.sum(np.power(point1 - point2, 2))
+                num_valid_pts += 1
         try:
-            ans = ans / num
+            dist = dist / num_valid_pts
         except Exception as e:
             print(e)
-            print(ax)
-            print(ay)
-            print(bx)
-            print(by)
-        return ans
+            print(ax, ay, bx, by)
+
+        return dist
 
     def reconstruct(self):
         """
