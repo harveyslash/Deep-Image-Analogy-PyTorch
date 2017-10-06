@@ -58,10 +58,10 @@ class PatchMatch(object):
             while dx <= self.patch_size // 2:
                 if (ay + dy) < a_rows and (ay + dy) >= 0 and (ax + dx) < a_cols and (ax + dx) >= 0:
                     if (by + dy) < b_rows and (by + dy) >= 0 and (bx + dx) < b_cols and (bx + dx) >= 0:
-                        # ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
-                        for channel in range(self.A.shape[2]):
-                            dd = self.A[ay + dy][ax + dx][channel] - self.B[by + dy][bx + dx][channel]
-                            ans += dd * dd
+                        ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
+                        # for channel in range(self.A.shape[2]):
+                            # dd = int(self.A[ay + dy][ax + dx][channel]) - int(self.B[by + dy][bx + dx][channel])
+                            # ans += int(dd * dd)
                         num += 1
                 dx += 1
             dy += 1
@@ -124,8 +124,8 @@ class PatchMatch(object):
 
         img = np.zeros((nnf.shape[0], nnf.shape[1], 3), dtype=np.uint8)
 
-        for i in range(1, nnf.shape[0]):
-            for j in range(1, nnf.shape[1]):
+        for i in range( nnf.shape[0]):
+            for j in range( nnf.shape[1]):
                 pos = nnf[i, j]
                 img[i, j, 0] = int(255 * (pos[0] / self.B.shape[1]))
                 img[i, j, 1] = int(255 * (pos[1] / self.B.shape[0]))
@@ -210,9 +210,9 @@ class PatchMatch(object):
                             ymax = min(ybest + rand_d, b_rows)
 
                             if xmin > xmax:
-                                rx = np.random.randint(xmax, xmin)
+                                rx = -np.random.randint(xmax, xmin)
                             if ymin > ymax:
-                                ry = np.random.randint(ymax, ymin)
+                                ry = -np.random.randint(ymax, ymin)
 
                             if xmin < xmax and ymin < ymax:
                                 rx = np.random.randint(xmin, xmax)
