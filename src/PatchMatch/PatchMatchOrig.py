@@ -237,5 +237,5 @@ class PatchMatch(object):
 
                     ax += xchange
                 ay += ychange
-            print("done iteration {}".format(it))
+            print("done iteration {}".format(it+1))
         print("Done")
