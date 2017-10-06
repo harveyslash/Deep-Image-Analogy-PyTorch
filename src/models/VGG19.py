@@ -68,7 +68,9 @@ class VGG19:
 
     def get_viz_tensor(self, activations_tensor):
         reshaped_tensor = activations_tensor.view(-1, 1, activations_tensor.size()[1], activations_tensor.size()[2])
-        return make_grid(reshaped_tensor).numpy()
+        grid = make_grid(reshaped_tensor).numpy()
+        grid = np.transpose(grid, (1, 2, 0))
+        return grid
 
     def get_features_for_layer(self, img_tensor, layer_num):
 
