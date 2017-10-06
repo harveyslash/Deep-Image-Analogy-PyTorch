@@ -3,7 +3,7 @@ from PIL import Image
 from torch.autograd import Variable
 
 
-def load_image(img_path, to_array=False, to_variable=False):
+def load_image(img_path, to_array=False):
     img = Image.open(img_path).convert("RGB")
     scale = transforms.Scale((224, 224))
     tensorize = transforms.ToTensor()
@@ -16,8 +16,6 @@ def load_image(img_path, to_array=False, to_variable=False):
 
     if to_array:
         img_tensor = img_tensor.unsqueeze(0)
-    if to_variable:
-        img_tensor = Variable(img_tensor)
 
     return img_tensor
 

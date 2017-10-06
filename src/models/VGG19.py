@@ -66,6 +66,10 @@ class VGG19:
                 batn_counter += 1
                 self.model.add_layer(name, layer)  # ***
 
+    def get_viz_tensor(self, activations_tensor):
+        reshaped_tensor = activations_tensor.view(-1, 1, activations_tensor.size()[1], activations_tensor.size()[2])
+        return make_grid(reshaped_tensor).numpy()
+
     def get_features_for_layer(self, img_tensor, layer_num):
 
         feature = self.model(img_tensor)[layer_num].data
