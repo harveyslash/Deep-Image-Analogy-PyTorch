@@ -76,12 +76,12 @@ class PatchMatch(object):
             while dx<= self.patch_size//2:
                 if (ay + dy) < a_rows and (ay + dy) >= 0 and (ax + dx) < a_cols and (ax + dx) >= 0:
                     if (by + dy) < b_rows and (by + dy) >= 0 and (bx + dx) < b_cols and (bx + dx) >= 0:
-                        ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
+                        # ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
 
 
-                        # for channel in range(self.A.shape[2]):
-                            # dd = self.A[ay + dy][ax + dx][channel] - self.B[by + dy][bx + dx][channel]
-                            # ans += dd*dd
+                        for channel in range(self.A.shape[2]):
+                            dd = self.A[ay + dy][ax + dx][channel] - self.B[by + dy][bx + dx][channel]
+                            ans += dd*dd
                         num += 1
                 dx +=1
             dy+=1
@@ -227,6 +227,7 @@ class PatchMatch(object):
                                 xbest, ybest, dbest = xp, yp, val
                                 
                     rand_d = max(self.B.shape[0], self.B.shape[1])
+                    rand_d = 6
                     while rand_d >= 1:
                         try:
                             xmin = max(xbest - rand_d, 0)
