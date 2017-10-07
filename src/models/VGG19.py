@@ -43,26 +43,26 @@ class VGG19:
 
         block_counter = 1
 
-        for layer in list(self.cnn_temp):
+        for i,layer in enumerate(list(self.cnn_temp)):
 
             if isinstance(layer, nn.Conv2d):
-                name = "conv_" + str(block_counter) + "_" + str(conv_counter)
+                name = "conv_" + str(block_counter) + "_" + str(conv_counter)+"__" +str(i)
                 conv_counter += 1
                 self.model.add_layer(name, layer)
 
             if isinstance(layer, nn.ReLU):
-                name = "relu_" + str(block_counter) + "_" + str(relu_counter)
+                name = "relu_" + str(block_counter) + "_" + str(relu_counter)+"__" +str(i)
                 relu_counter += 1
                 self.model.add_layer(name, nn.ReLU(inplace=False))
 
             if isinstance(layer, nn.MaxPool2d):
-                name = "pool_" + str(block_counter)
+                name = "pool_" + str(block_counter)+"__" +str(i)
                 batn_counter = relu_counter = conv_counter = 1
                 block_counter += 1
                 self.model.add_layer(name, nn.AvgPool2d(2, 2))  # ***
 
             if isinstance(layer, nn.BatchNorm2d):
-                name = "batn_" + str(block_counter) + "_" + str(batn_counter)
+                name = "batn_" + str(block_counter) + "_" + str(batn_counter)+"__" +str(i)
                 batn_counter += 1
                 self.model.add_layer(name, layer)  # ***
 
