@@ -11,10 +11,12 @@ import matplotlib.pyplot as plt
 
 
 class PatchMatch(object):
-    def __init__(self, a, b, patch_size):
-        assert a.shape == b.shape, "Dimensions were unequal for patch-matching input"
+    def __init__(self, a, aa, b, bb, patch_size):
+        assert a.shape == b.shape == aa.shape == bb.shape, "Dimensions were unequal for patch-matching input"
         self.A = a
         self.B = b
+        self.AA = aa
+        self.BB = bb
         self.patch_size = patch_size
         self.nnf = np.zeros(shape=(2, self.A.shape[0], self.A.shape[1])).astype(np.int)  # the nearest neighbour field
         self.nnd = np.zeros(shape=(self.A.shape[0], self.A.shape[1]))  # the distance map for the nnf
@@ -58,10 +60,10 @@ class PatchMatch(object):
             while dx <= self.patch_size // 2:
                 if (ay + dy) < a_rows and (ay + dy) >= 0 and (ax + dx) < a_cols and (ax + dx) >= 0:
                     if (by + dy) < b_rows and (by + dy) >= 0 and (bx + dx) < b_cols and (bx + dx) >= 0:
-                        ans += np.sum((self.A[ay+dy][ax+dx] - self.B[by+dy][bx+dx]) **2)
+                        ans += np.sum((self.A[ay + dy][ax + dx] - self.B[by + dy][bx + dx]) ** 2 + (self.AA[ay + dy][ax + dx] - self.BB[by + dy][bx + dx]) ** 2)
                         # for channel in range(self.A.shape[2]):
-                            # dd = int(self.A[ay + dy][ax + dx][channel]) - int(self.B[by + dy][bx + dx][channel])
-                            # ans += int(dd * dd)
+                        # dd = int(self.A[ay + dy][ax + dx][channel]) - int(self.B[by + dy][bx + dx][channel])
+                        # ans += int(dd * dd)
                         num += 1
                 dx += 1
             dy += 1
@@ -124,8 +126,8 @@ class PatchMatch(object):
 
         img = np.zeros((nnf.shape[0], nnf.shape[1], 3), dtype=np.uint8)
 
-        for i in range( nnf.shape[0]):
-            for j in range( nnf.shape[1]):
+        for i in range(nnf.shape[0]):
+            for j in range(nnf.shape[1]):
                 pos = nnf[i, j]
                 img[i, j, 0] = int(255 * (pos[0] / self.B.shape[1]))
                 img[i, j, 1] = int(255 * (pos[1] / self.B.shape[0]))
@@ -237,5 +239,5 @@ class PatchMatch(object):
 
                     ax += xchange
                 ay += ychange
-            print("done iteration {}".format(it+1))
+            print("done iteration {}".format(it + 1))
         print("Done")
