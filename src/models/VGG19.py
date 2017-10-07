@@ -66,8 +66,11 @@ class VGG19:
                 batn_counter += 1
                 self.model.add_layer(name, layer)  # ***
 
-    def forward_subnet(self, start_layer, end_layer):
+    def forward_subnet(self, input_tensor, start_layer, end_layer):
         for i, layer in enumerate(list(self.model)):
+            if i >= start_layer and i <= end_layer:
+                input_tensor = layer(input_tensor)
+        return input_tensor
 
     def get_features_for_layer(self, img_tensor, layer_num):
 
