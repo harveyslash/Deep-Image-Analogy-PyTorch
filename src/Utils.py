@@ -44,8 +44,8 @@ def get_viz_tensor(activations_tensor):
     return grid
 
 
-def reconstruct_image(img_a, img_b, scale, size, pm):
-    final_img = np.zeros_like(img_b)
+def reconstruct_image(img_a, scale, size, pm):
+    final_img = np.zeros_like(img_a)
 
     for i in range(size):
         for j in range(size):
