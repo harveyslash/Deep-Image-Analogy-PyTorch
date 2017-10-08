@@ -1,5 +1,5 @@
 from torchvision import transforms
-from PIL import Image
+from PIL import Image,ImageOps
 from torch.autograd import Variable
 from torchvision.utils import make_grid
 import numpy as np
@@ -7,7 +7,9 @@ import numpy as np
 
 def load_image(img_path, to_array=False, to_variable=False):
     img = Image.open(img_path).convert("RGB")
-    scale = transforms.Scale((224, 224))
+    img = ImageOps.fit(img, (224,224), Image.ANTIALIAS)
+
+    scale = transforms.Scale((224,224))
     tensorize = transforms.ToTensor()
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
