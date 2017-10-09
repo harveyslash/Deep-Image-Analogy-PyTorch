@@ -75,4 +75,4 @@ class VGG19:
     def get_features_for_layer(self, img_tensor, layer_num):
 
         feature = self.model(img_tensor)[layer_num].data
-        return feature
+        return feature.squeeze().numpy().transpose(1, 2, 0)
