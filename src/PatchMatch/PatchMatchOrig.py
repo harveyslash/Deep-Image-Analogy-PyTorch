@@ -37,6 +37,16 @@ class PatchMatch(object):
                 self.nnd[i, j] = self.cal_dist(i, j, pos[1], pos[0])
 
     def cal_dist(self, ay, ax, by, bx):
+        dx0 = dy0 = self.patch_size // 2
+        dx1 = dy1 = self.patch_size // 2 + 1
+        dx0 = min(ax, bx, dx0)
+        dx1 = min(self.A.shape[0] - ax, self.B.shape[0] - bx, dx1)
+        dy0 = min(ay, by, dy0)
+        dy1 = min(self.A.shape[1] - ay, self.B.shape[1] - by, dy1)
+
+        return np.sum(((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)+((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)) / (dx1 + dx0) / (dy1 + dy0)
+
+    def cal_dist_ol(self, ay, ax, by, bx):
         """
         Calculate euclidean distance between patch in A and Patch in B
         :param ay: y coordinate of the patch in A
