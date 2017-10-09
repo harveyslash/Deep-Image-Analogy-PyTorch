@@ -130,7 +130,7 @@ class PatchMatch(object):
             for j in range(nnf.shape[1]):
                 pos = nnf[i, j]
                 img[i, j, 0] = int(255 * (pos[0] / self.B.shape[1]))
-                img[i, j, 1] = int(255 * (pos[1] / self.B.shape[0]))
+                img[i, j, 2] = int(255 * (pos[1] / self.B.shape[0]))
 
         return img
 
