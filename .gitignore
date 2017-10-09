@@ -90,6 +90,9 @@ ENV/
 # autoenv
 .env
 
+# config files
+config/
+
 # Spyder project settings
 .spyderproject
 .spyproject
