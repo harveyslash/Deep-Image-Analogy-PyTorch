@@ -44,7 +44,7 @@ class PatchMatch(object):
         dy0 = min(ay, by, dy0)
         dy1 = min(self.A.shape[1] - ay, self.B.shape[1] - by, dy1)
 
-        return np.sum(((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)+((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)) / (dx1 + dx0) / (dy1 + dy0)
+        return np.sum(((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)+((self.AA[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.BB[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)) /( (dx1 + dx0) * (dy1 + dy0))
 
     def cal_dist_ol(self, ay, ax, by, bx):
         """
@@ -78,7 +78,7 @@ class PatchMatch(object):
                 dx += 1
             dy += 1
         try:
-            ans = ans / num
+            ans = ans / (2*num)
         except Exception as e:
             print(e)
             print(ax)
