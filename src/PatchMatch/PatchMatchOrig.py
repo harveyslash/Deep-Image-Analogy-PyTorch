@@ -226,8 +226,9 @@ class PatchMatch(object):
                             if ymin > ymax:
                                 ry = -np.random.randint(ymax, ymin)
 
-                            if xmin < xmax and ymin < ymax:
+                            if xmin <= xmax: 
                                 rx = np.random.randint(xmin, xmax)
+                            if ymin <= ymax:
                                 ry = np.random.randint(ymin, ymax)
 
                             val = self.cal_dist(ay, ax, ry, rx)
