@@ -16,7 +16,7 @@ from torchvision.utils import make_grid
 from PIL import Image
 from collections import OrderedDict
 from PIL import Image
-
+import matplotlib.pyplot as plt
 
 class FeatureExtractor(nn.Sequential):
     def __init__(self):
@@ -72,7 +72,69 @@ class VGG19:
                 input_tensor = layer(input_tensor)
         return input_tensor
 
-    def get_features_for_layer(self, img_tensor, layer_num):
+    def get_features_for_layer(self, img_tensor):
+
+        features = self.model(img_tensor)
+        features = [i.data.squeeze().numpy().transpose(1,2,0) for i in features]
+        return np.array(features)
 
         feature = self.model(img_tensor)[layer_num].data
         return feature.squeeze().numpy().transpose(1, 2, 0)
+    
+    def get_deconvoluted_feat(self,feat,feat_layer_num,iters=13):
+        
+        def cn_last(th_array):
+            return th_array.transpose(1,2,0)
+
+        def cn_first(th_array):
+            return th_array.transpose(2,0,1)
+
+        feat = cn_first(feat)
+        feat = torch.from_numpy(feat)
+        scale = 1
+
+        if feat_layer_num == 5:
+            start_layer,end_layer = 21,29
+            noise = np.random.uniform(size=(1,512,28*scale,28*scale),low=0 , high=1) 
+        elif feat_layer_num == 4:
+            start_layer,end_layer = 12,20
+            noise = np.random.uniform(size=(1,256,56*scale,56*scale),low=0 , high=1) 
+        elif feat_layer_num == 3:
+            start_layer,end_layer = 7,11
+            noise = np.random.uniform(size=(1,128,112*scale,112*scale),low=0 , high=1) 
+        elif feat_layer_num == 2:
+            start_layer,end_layer = 2,6
+            noise = np.random.uniform(size=(1,64,224*scale,224*scale),low=0 , high=1) 
+        else:
+            print("Invalid layer number")
+        noise = Variable(torch.from_numpy(noise).float())
+        noise = noise.cuda()
+        noise = nn.Parameter(noise.data.clone(),requires_grad=True)
+        optimizer = optim.Adam([noise],lr=1,weight_decay=.1)
+
+        if not next(self.model.parameters()).is_cuda:
+            self.model = self.model.cuda()
+
+        feat = Variable(feat).cuda()
+        loss = nn.MSELoss(size_average=False)
+        loss_hist = []
+        for i in range(1,iters):
+            optimizer.zero_grad()
+            if i%250 ==0 and i<=500:
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = param_group['lr'] /10
+                    print(param_group['lr'])
+            output = self.forward_subnet(input_tensor=noise,start_layer=start_layer,end_layer=end_layer)
+            loss_value = loss(output,feat)
+            loss_value.backward()
+            optimizer.step()
+            noise.data.clamp_(0., 1.)
+            loss_hist.append(loss_value.cpu().data.numpy())
+
+        plt.plot(loss_hist)
+        plt.show()
+
+        noise_cpu = noise.cpu().data.squeeze().numpy()
+        del feat 
+        del noise
+        return cn_last(noise_cpu)
