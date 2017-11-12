@@ -11,7 +11,7 @@ You can supply the same image twice to use patchmatch between 2 images.
 
 import numpy as np
 import matplotlib.pyplot as plt
-
+import cv2
 
 class PatchMatch(object):
     def __init__(self, a, aa, b, bb, patch_size):
@@ -58,30 +58,41 @@ class PatchMatch(object):
         return np.sum(((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2) + (
             (self.AA[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.BB[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)) / ((dx1 + dx0) * (dy1 + dy0))
 
-    def reconstruct(self):
-        """
-        Simple reconstruction of A using patches from B.
-        :return: The reconstructed RGB Matrix
-        """
-        ans = np.zeros_like(self.A)
-        for i in range(self.A.shape[0]):
-            for j in range(self.A.shape[1]):
-                pos = self.nnf[i, j]
-                ans[i, j] = self.B[pos[1], pos[0]]
-        return ans
+    # def reconstruct(self):
+        # """
+        # Simple reconstruction of A using patches from B.
+        # :return: The reconstructed RGB Matrix
+        # """
+        # ans = np.zeros_like(self.A)
+        # for i in range(self.A.shape[0]):
+            # for j in range(self.A.shape[1]):
+                # pos = self.nnf[i, j]
+                # ans[i, j] = self.B[pos[1], pos[0]]
+        # return ans
 
-    def reconstruct_avg(self, patch_size=5):
+    def reconstruct_image(self,img_a):
+        final_img = np.zeros_like(img_a)
+        size = self.nnf.shape[0]
+        scale = img_a.shape[0] // self.nnf.shape[0]
+        for i in range(size):
+            for j in range(size):
+                x, y = self.nnf[i, j]
+                if final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)].shape == img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)].shape:
+                    final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)] = img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)]
+        return final_img
 
-        final = np.zeros_like(self.B)
-        for i in range(self.B.shape[0]):
-            for j in range(self.B.shape[1]):
+    def reconstruct_avg(self,img, patch_size=5):
+
+        final = np.zeros_like(img)
+        for i in range(img.shape[0]):
+            for j in range(img.shape[1]):
 
                 dx0 = dy0 = patch_size // 2
                 dx1 = dy1 = patch_size // 2 + 1
                 dx0 = min(j, dx0)
-                dx1 = min(self.B.shape[0] - j, dx1)
+                dx1 = min(img.shape[0] - j, dx1)
                 dy0 = min(i, dy0)
-                dy1 = min(self.B.shape[1] - i, dy1)
+                dy1 = min(img.shape[1] - i, dy1)
 
                 patch = self.nnf[i - dy0:i + dy1, j - dx0:j + dx1]
 
@@ -90,13 +101,36 @@ class PatchMatch(object):
                 for ay in range(patch.shape[0]):
                     for ax in range(patch.shape[1]):
                         x, y = patch[ay, ax]
-                        lookups[ay, ax] = self.B[y, x]
+                        lookups[ay, ax] = img[y, x]
 
                 if lookups.size > 0:
                     value = np.average(lookups, axis=(0, 1))
                     final[i, j] = value
 
         return final
+
+    def upsample_nnf(self,size):
+
+        temp = np.zeros((self.nnf.shape[0],self.nnf.shape[1],3))
+
+        for y in range(self.nnf.shape[0]):
+            for x in range(self.nnf.shape[1]):
+                temp[y][x] = [self.nnf[y][x][0],self.nnf[y][x][1],0]
+
+        img = np.zeros(shape=(size,size,2),dtype=np.int)
+        small_size = self.nnf.shape[0]
+        aw_ratio = ((size)//small_size)
+        ah_ratio = ((size)//small_size)
+
+        temp = cv2.resize(temp, None, fx=aw_ratio, fy=aw_ratio, interpolation= cv2.INTER_NEAREST)
+
+        for i in range(temp.shape[0]):
+            for j in range(temp.shape[1]):
+
+                pos = temp[i,j]
+                img[i,j] = pos[0]*aw_ratio , pos[1]*ah_ratio
+
+        return img
 
     def visualize(self):
         """

@@ -58,59 +58,7 @@ def normalize_feat_map(feat_map):
     """
     return feat_map/np.linalg.norm(feat_map,ord=2,axis=(2),keepdims=True)
 
-def upsample_nnf(nnf,size):
 
-    temp = np.zeros((nnf.shape[0],nnf.shape[1],3))
-
-    for y in range(nnf.shape[0]):
-        for x in range(nnf.shape[1]):
-            temp[y][x] = [nnf[y][x][0],nnf[y][x][1],0]
-
-    img = np.zeros(shape=(size,size,2),dtype=np.int)
-    small_size = nnf.shape[0]
-    aw_ratio = ((size)//small_size)
-    ah_ratio = ((size)//small_size)
-
-    temp = cv2.resize(temp, None, fx=aw_ratio, fy=aw_ratio, interpolation= cv2.INTER_NEAREST)
-
-    for i in range(temp.shape[0]):
-        for j in range(temp.shape[1]):
-
-            pos = temp[i,j]
-            img[i,j] = pos[0]*aw_ratio , pos[1]*ah_ratio
-
-    return img
-
-
-def reconstruct_avg(nnf,img,patch_size=5):
-
-    final = np.zeros_like(img)
-    print(final.shape)
-
-    for i in range(img.shape[0]):
-        for j in range(img.shape[1]):
-
-            dx0 = dy0 = patch_size // 2
-            dx1 = dy1 = patch_size // 2 + 1
-            dx0 = min(j, dx0)
-            dx1 = min(img.shape[0] - j, dx1)
-            dy0 = min(i, dy0)
-            dy1 = min(img.shape[1] - i,  dy1)
-
-            patch = nnf[i - dy0:i + dy1, j - dx0:j + dx1]
-
-            lookups = np.zeros(shape=(patch.shape[0],patch.shape[1],3),dtype=np.float32)
-
-            for ay in range(patch.shape[0]):
-                for ax in range(patch.shape[1]):
-                    x,y = patch[ay,ax]
-                    lookups[ay,ax] = img[y,x]
-
-            if lookups.size > 0 :
-                value = np.average(lookups,axis=(0,1))
-                final[i,j] = value
-
-    return final    
 
 @click.command()
 @click.argument('imga_path', type=click.Path(exists=True))
@@ -146,14 +94,14 @@ def main(imga_path,imgbb_path,out):
     imgbb_raw = Utils.load_image(img_path=imgbb_path,to_array=False,to_variable=False).numpy().transpose(1,2,0)
     imga_raw.shape
 
-    recon = Utils.reconstruct_image(imgbb_raw,pm=pm5ab)
+    recon = pm5ab.reconstruct_image(imga_raw)
 
     pm5ba = PatchMatchOrig(feat5bb_norm,feat5bb_norm,feat5a_norm,feat5a_norm,c_patch_sizes[0])
     pm5ba.propagate(iters=5,rand_search_radius=c_patch_radii[0])
-    recon = Utils.reconstruct_image(imga_raw,pm=pm5ba)
+    recon = pm5ba.reconstruct_image(imga_raw)
 
-    warped_feat5bb = Utils.reconstruct_image(feat5bb,pm=pm5ab)
-    warped_feat5a = Utils.reconstruct_image(feat5a,pm=pm5ba)
+    warped_feat5bb = pm5ab.reconstruct_image(feat5bb)
+    warped_feat5a = pm5ba.reconstruct_image(feat5a)
     ###### Block L 5 Done ######
 
 
@@ -175,18 +123,18 @@ def main(imga_path,imgbb_path,out):
 
 
     pm4ab = PatchMatchOrig(feat4a_norm,feat4aa_norm,feat4b_norm,feat4bb_norm, c_patch_sizes[1])
-    pm4ab.nnf = upsample_nnf(nnf=pm5ba.nnf,size=28)
+    pm4ab.nnf = pm5ab.upsample_nnf(size=28)
 
     pm4ab.propagate(iters=5,rand_search_radius=c_patch_radii[1])
 
 
     pm4ba = PatchMatchOrig(feat4bb_norm,feat4b_norm,feat4aa_norm,feat4a_norm, c_patch_sizes[1])
-    pm4ba.nnf = upsample_nnf(nnf=pm5ba.nnf,size=28)
+    pm4ba.nnf = pm5ba.upsample_nnf(size=28)
 
     pm4ba.propagate(iters=5,rand_search_radius=c_patch_radii[1])
 
-    warped_feat4bb = Utils.reconstruct_image(feat4bb,pm=pm4ab)
-    warped_feat4a = Utils.reconstruct_image(feat4a,pm=pm4ba)
+    warped_feat4bb = pm4ab.reconstruct_image(feat4bb)
+    warped_feat4a = pm4ba.reconstruct_image(feat4a)
     ###### Block 4 done ######
 
 
@@ -209,17 +157,17 @@ def main(imga_path,imgbb_path,out):
     feat3b_norm = normalize_feat_map(feat3b)
 
     pm3ab = PatchMatchOrig(feat3a_norm,feat3aa_norm,feat3b_norm,feat3bb_norm, c_patch_sizes[2])
-    pm3ab.nnf = upsample_nnf(nnf=pm4ab.nnf,size=56)
+    pm3ab.nnf = pm4ab.upsample_nnf(size=56)
 
     pm3ab.propagate(iters=5,rand_search_radius=c_patch_radii[2])
 
     pm3ba = PatchMatchOrig(feat3bb_norm,feat3b_norm,feat3aa_norm,feat3a_norm, c_patch_sizes[2])
-    pm3ba.nnf = upsample_nnf(nnf=pm4ba.nnf,size=56)
+    pm3ba.nnf = pm4ba.upsample_nnf(size=56)
 
     pm3ba.propagate(iters=5,rand_search_radius=c_patch_radii[2])
 
-    warped_feat3bb = Utils.reconstruct_image(feat3bb,pm=pm3ab)
-    warped_feat3a = Utils.reconstruct_image(feat3a,pm=pm3ba)
+    warped_feat3bb = pm3ab.reconstruct_image(feat3bb)
+    warped_feat3a = pm3ba.reconstruct_image(feat3a)
 
     ###### Block 3 done ######
 
@@ -241,19 +189,19 @@ def main(imga_path,imgbb_path,out):
     feat2b_norm = normalize_feat_map(feat2b)
 
     pm2ab = PatchMatchOrig(feat2a_norm,feat2aa_norm,feat2b_norm,feat2bb_norm, c_patch_sizes[3])
-    pm2ab.nnf = upsample_nnf(nnf=pm3ab.nnf,size=112)
+    pm2ab.nnf = pm3ab.upsample_nnf(size=112)
 
     pm2ab.propagate(iters=5,rand_search_radius=c_patch_radii[3])
 
 
     pm2ba = PatchMatchOrig(feat2bb_norm,feat2b_norm,feat2aa_norm,feat2a_norm, c_patch_sizes[3])
-    pm2ba.nnf = upsample_nnf(nnf=pm3ba.nnf,size=112)
+    pm2ba.nnf = pm3ba.upsample_nnf(size=112)
 
     pm2ba.propagate(iters=5,rand_search_radius=c_patch_radii[3])
 
 
-    warped_feat2bb = Utils.reconstruct_image(feat2bb,pm=pm2ab)
-    warped_feat2a = Utils.reconstruct_image(feat2a,pm=pm2ba)
+    warped_feat2bb = pm2ab.reconstruct_image(feat2bb)
+    warped_feat2a = pm2ba.reconstruct_image(feat2a)
 
     ###### Block 2 done ######
 
@@ -275,7 +223,7 @@ def main(imga_path,imgbb_path,out):
     feat1b_norm = normalize_feat_map(feat1b)
 
     pm1ab = PatchMatchOrig(feat1a_norm,feat1aa_norm,feat1b_norm,feat1bb_norm, c_patch_sizes[4])
-    pm1ab.nnf = upsample_nnf(nnf=pm2ab.nnf,size=224)
+    pm1ab.nnf = pm2ab.upsample_nnf(size=224)
 
     pm1ab.propagate(iters=5,rand_search_radius=c_patch_radii[4])
 
@@ -283,9 +231,10 @@ def main(imga_path,imgbb_path,out):
     # plt.imshow(Utils.deprocess_image(Utils.reconstruct_image(img_a=imgbb_raw,pm=pm1ab)))
     # plt.show()
 
-    ups = upsample_nnf(nnf=pm1ab.nnf,size=224)
+    ups = pm1ab.upsample_nnf(size=224)
     plt.axis('off')
-    resB = np.clip(Utils.deprocess_image(reconstruct_avg(pm1ab.nnf,imgbb_raw,patch_size=2)),0,1) # avg reconstruction
+    resB = np.clip(Utils.deprocess_image(pm1ab.reconstruct_avg(imgbb_raw,patch_size=2)),0,1)
+
     # plt.imshow(resB)
     plt.imsave(out,resB)
     # plt.show()
