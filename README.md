@@ -3,16 +3,6 @@ Deep-Image-Analogy
 
 A short description of the project.
 
-## Getting Started
-
-You can get set up the project environment using conda or virtualenv as shown below:
-
-```
-#conda
-conda create --name [insert environment name here] --file conda-env.txt
-
-#virtualenv [TODO]
-```
 
 Project Organization
 ------------
