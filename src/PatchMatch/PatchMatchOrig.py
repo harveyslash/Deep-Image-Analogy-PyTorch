@@ -10,8 +10,8 @@ You can supply the same image twice to use patchmatch between 2 images.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
+
 
 class PatchMatch(object):
     def __init__(self, a, aa, b, bb, patch_size):
@@ -58,19 +58,12 @@ class PatchMatch(object):
         return np.sum(((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2) + (
             (self.AA[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.BB[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)) / ((dx1 + dx0) * (dy1 + dy0))
 
-    # def reconstruct(self):
-        # """
-        # Simple reconstruction of A using patches from B.
-        # :return: The reconstructed RGB Matrix
-        # """
-        # ans = np.zeros_like(self.A)
-        # for i in range(self.A.shape[0]):
-            # for j in range(self.A.shape[1]):
-                # pos = self.nnf[i, j]
-                # ans[i, j] = self.B[pos[1], pos[0]]
-        # return ans
-
-    def reconstruct_image(self,img_a):
+    def reconstruct_image(self, img_a):
+        """
+        Reconstruct image using the NNF and img_a.
+        :param img_a: the patches to reconstruct from
+        :return: reconstructed image
+        """
         final_img = np.zeros_like(img_a)
         size = self.nnf.shape[0]
         scale = img_a.shape[0] // self.nnf.shape[0]
@@ -81,7 +74,14 @@ class PatchMatch(object):
                     final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)] = img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)]
         return final_img
 
-    def reconstruct_avg(self,img, patch_size=5):
+    def reconstruct_avg(self, img, patch_size=5):
+        """
+        Reconstruct image using average voting.
+        :param img: the image to reconstruct from. Numpy array of dim H*W*3
+        :param patch_size: the patch size to use
+
+        :return: reconstructed image
+        """
 
         final = np.zeros_like(img)
         for i in range(img.shape[0]):
@@ -109,26 +109,31 @@ class PatchMatch(object):
 
         return final
 
-    def upsample_nnf(self,size):
+    def upsample_nnf(self, size):
+        """
+        Upsample NNF based on size. It uses nearest neighbour interpolation
+        :param size: INT size to upsample to.
 
-        temp = np.zeros((self.nnf.shape[0],self.nnf.shape[1],3))
+        :return: upsampled NNF
+        """
+
+        temp = np.zeros((self.nnf.shape[0], self.nnf.shape[1], 3))
 
         for y in range(self.nnf.shape[0]):
             for x in range(self.nnf.shape[1]):
-                temp[y][x] = [self.nnf[y][x][0],self.nnf[y][x][1],0]
+                temp[y][x] = [self.nnf[y][x][0], self.nnf[y][x][1], 0]
 
-        img = np.zeros(shape=(size,size,2),dtype=np.int)
+        img = np.zeros(shape=(size, size, 2), dtype=np.int)
         small_size = self.nnf.shape[0]
-        aw_ratio = ((size)//small_size)
-        ah_ratio = ((size)//small_size)
+        aw_ratio = ((size) // small_size)
+        ah_ratio = ((size) // small_size)
 
-        temp = cv2.resize(temp, None, fx=aw_ratio, fy=aw_ratio, interpolation= cv2.INTER_NEAREST)
+        temp = cv2.resize(temp, None, fx=aw_ratio, fy=aw_ratio, interpolation=cv2.INTER_NEAREST)
 
         for i in range(temp.shape[0]):
             for j in range(temp.shape[1]):
-
-                pos = temp[i,j]
-                img[i,j] = pos[0]*aw_ratio , pos[1]*ah_ratio
+                pos = temp[i, j]
+                img[i, j] = pos[0] * aw_ratio, pos[1] * ah_ratio
 
         return img
 
