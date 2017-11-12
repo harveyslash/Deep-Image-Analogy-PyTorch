@@ -37,8 +37,10 @@ def blend_features(feat_a, recon_feat_bb, alpha=0.8, tau=0.05, k=300.):
         return 1. / (1. + np.exp(-x))
 
     def clip_at_threshold(neuron_mag_a):
-        if True:
-            neuron_mag_a[neuron_mag_a < .01] = 0
+        
+        def clip_at_threshold(neuron_mag_a,clip_value=.05):
+            neuron_mag_a[neuron_mag_a < clip_value] = 0
+            return neuron_mag_a
         return neuron_mag_a
 
     norm_feat_a = feat_a**2
@@ -70,7 +72,7 @@ def main(imga_path,imgbb_path,out):
     c_patch_sizes = [3,3,3,5,5]
     c_patch_radii = [500,6,6,4,4]
 
-    c_iters = [700,700,700,700]
+    c_iters = [1700,1700,1700,1700]
 
     model = VGG19()
 

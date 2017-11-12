@@ -16,7 +16,9 @@ from torchvision.utils import make_grid
 from PIL import Image
 from collections import OrderedDict
 from PIL import Image
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 
 class FeatureExtractor(nn.Sequential):
     def __init__(self):
@@ -72,7 +74,7 @@ class VGG19:
                 input_tensor = layer(input_tensor)
         return input_tensor
 
-    def get_features_for_layer(self, img_tensor):
+    def get_features(self, img_tensor):
 
         features = self.model(img_tensor)
         features = [i.data.squeeze().numpy().transpose(1,2,0) for i in features]
@@ -107,10 +109,11 @@ class VGG19:
             noise = np.random.uniform(size=(1,64,224*scale,224*scale),low=0 , high=1) 
         else:
             print("Invalid layer number")
-        noise = Variable(torch.from_numpy(noise).float())
+        # noise = Variable(torch.from_numpy(noise).float()) # use this if you want custom noise 
+        noise = Variable(torch.randn(noise.shape).float())
         noise = noise.cuda()
-        noise = nn.Parameter(noise.data.clone(),requires_grad=True)
-        optimizer = optim.Adam([noise],lr=1,weight_decay=.1)
+        noise = nn.Parameter(noise.data)
+        optimizer = optim.Adam([noise],lr=1)
 
         if not next(self.model.parameters()).is_cuda:
             self.model = self.model.cuda()
@@ -120,19 +123,20 @@ class VGG19:
         loss_hist = []
         for i in range(1,iters):
             optimizer.zero_grad()
-            if i%250 ==0 and i<=500:
-                for param_group in optimizer.param_groups:
-                    param_group['lr'] = param_group['lr'] /10
-                    print(param_group['lr'])
             output = self.forward_subnet(input_tensor=noise,start_layer=start_layer,end_layer=end_layer)
-            loss_value = loss(output,feat)
+
+            diff = output - feat
+            norm = torch.norm(diff,p=2)
+            loss_value = norm**2
+
             loss_value.backward()
             optimizer.step()
+
             noise.data.clamp_(0., 1.)
             loss_hist.append(loss_value.cpu().data.numpy())
 
-        plt.plot(loss_hist)
-        plt.show()
+        # plt.plot(loss_hist)
+        # plt.show()
 
         noise_cpu = noise.cpu().data.squeeze().numpy()
         del feat 
