@@ -1,17 +1,25 @@
 """
-The Patchmatch Algorithm
+The Patchmatch Algorithm. The actual algorithm is a nearly
+line to line port of the original c++ version.
+The distance calculation is different to leverage numpy's vectorized
+operations.
+
+This version uses 4 images instead of 2.
+You can supply the same image twice to use patchmatch between 2 images.
 
 """
 
 import numpy as np
-from numpy.lib import stride_tricks
-import cv2
-from matplotlib.colors import hsv_to_rgb
 import matplotlib.pyplot as plt
 
 
 class PatchMatch(object):
     def __init__(self, a, aa, b, bb, patch_size):
+        """
+        Initialize Patchmatch Object.
+        This method also randomizes the nnf , which will eventually
+        be optimized.
+        """
         assert a.shape == b.shape == aa.shape == bb.shape, "Dimensions were unequal for patch-matching input"
         self.A = a
         self.B = b
@@ -37,55 +45,18 @@ class PatchMatch(object):
                 self.nnd[i, j] = self.cal_dist(i, j, pos[1], pos[0])
 
     def cal_dist(self, ay, ax, by, bx):
+        """
+        Calculate distance between a patch in A to a patch in B.
+        :return: Distance calculated between the two patches
+        """
         dx0 = dy0 = self.patch_size // 2
         dx1 = dy1 = self.patch_size // 2 + 1
         dx0 = min(ax, bx, dx0)
         dx1 = min(self.A.shape[0] - ax, self.B.shape[0] - bx, dx1)
         dy0 = min(ay, by, dy0)
         dy1 = min(self.A.shape[1] - ay, self.B.shape[1] - by, dy1)
-
-        return np.sum(((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)+((self.AA[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.BB[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)) /( (dx1 + dx0) * (dy1 + dy0))
-
-    def cal_dist_ol(self, ay, ax, by, bx):
-        """
-        Calculate euclidean distance between patch in A and Patch in B
-        :param ay: y coordinate of the patch in A
-        :param ax: x coordinate of the patch in A
-        :param by: y coordinate of the patch in B
-        :param bx: x coordinate of the patch in B
-        :return:
-        """
-        ans = 0
-        num = 0
-        a_rows = self.A.shape[0]
-        a_cols = self.A.shape[1]
-
-        b_rows = self.A.shape[0]
-        b_cols = self.A.shape[1]
-
-        dy = -self.patch_size // 2
-        while dy <= self.patch_size // 2:
-
-            dx = -self.patch_size // 2
-            while dx <= self.patch_size // 2:
-                if (ay + dy) < a_rows and (ay + dy) >= 0 and (ax + dx) < a_cols and (ax + dx) >= 0:
-                    if (by + dy) < b_rows and (by + dy) >= 0 and (bx + dx) < b_cols and (bx + dx) >= 0:
-                        ans += np.sum((self.A[ay + dy][ax + dx] - self.B[by + dy][bx + dx]) ** 2 + (self.AA[ay + dy][ax + dx] - self.BB[by + dy][bx + dx]) ** 2)
-                        # for channel in range(self.A.shape[2]):
-                        # dd = int(self.A[ay + dy][ax + dx][channel]) - int(self.B[by + dy][bx + dx][channel])
-                        # ans += int(dd * dd)
-                        num += 1
-                dx += 1
-            dy += 1
-        try:
-            ans = ans / (2*num)
-        except Exception as e:
-            print(e)
-            print(ax)
-            print(ay)
-            print(bx)
-            print(by)
-        return ans
+        return np.sum(((self.A[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.B[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2) + (
+            (self.AA[ay - dy0:ay + dy1, ax - dx0:ax + dx1] - self.BB[by - dy0:by + dy1, bx - dx0:bx + dx1]) ** 2)) / ((dx1 + dx0) * (dy1 + dy0))
 
     def reconstruct(self):
         """
@@ -99,33 +70,33 @@ class PatchMatch(object):
                 ans[i, j] = self.B[pos[1], pos[0]]
         return ans
 
-    def reconstruct_img_voting(self, patch_size=3, arr_v=None):
+    def reconstruct_avg(self, patch_size=5):
 
-        if patch_size is None:
-            patch_size = self.patch_size
-        b_prime = np.zeros_like(self.A, dtype=np.uint8)
-
-        for i in range(self.A.shape[0]):  # traverse down a
-            for j in range(self.A.shape[1]):  # traverse across a
+        final = np.zeros_like(self.B)
+        for i in range(self.B.shape[0]):
+            for j in range(self.B.shape[1]):
 
                 dx0 = dy0 = patch_size // 2
                 dx1 = dy1 = patch_size // 2 + 1
-                dx0 = min(i, dx0)
-                dx1 = min(self.A.shape[0] - i, dx1)
-                dy0 = min(j, dy0)
-                dy1 = min(self.A.shape[1] - j, dy1)
+                dx0 = min(j, dx0)
+                dx1 = min(self.B.shape[0] - j, dx1)
+                dy0 = min(i, dy0)
+                dy1 = min(self.B.shape[1] - i, dy1)
 
-                votes = self.nnf[i - dx0:i + dx1, j - dy0:j + dy1]
-                b_patch = np.zeros(shape=(votes.shape[0], votes.shape[1], self.A.shape[2]))
+                patch = self.nnf[i - dy0:i + dy1, j - dx0:j + dx1]
 
-                for p_i in range(votes.shape[0]):
-                    for p_j in range(votes.shape[1]):
-                        b_patch[p_i, p_j] = self.B[votes[p_i, p_j][0], votes[p_i, p_j][1]]
+                lookups = np.zeros(shape=(patch.shape[0], patch.shape[1], 3), dtype=np.float32)
 
-                averaged_patch = np.average(b_patch, axis=(0, 1))
-                b_prime[i, j] = averaged_patch[:]
-        plt.imshow(b_prime[:, :, ::-1])
-        plt.show()
+                for ay in range(patch.shape[0]):
+                    for ax in range(patch.shape[1]):
+                        x, y = patch[ay, ax]
+                        lookups[ay, ax] = self.B[y, x]
+
+                if lookups.size > 0:
+                    value = np.average(lookups, axis=(0, 1))
+                    final[i, j] = value
+
+        return final
 
     def visualize(self):
         """
@@ -181,20 +152,10 @@ class PatchMatch(object):
 
                     xbest, ybest = self.nnf[ay, ax]
                     dbest = self.nnd[ay, ax]
-
-                    #                     if ax - xchange <0:
-                    #                         print("LESS THAN 0")
-                    #                         print(xchange)
-
                     if ax - xchange < a_cols and ax - xchange >= 0:
                         vp = self.nnf[ay, ax - xchange]
                         xp = vp[0] + xchange
                         yp = vp[1]
-
-                        #                         if ay < 0 or ax < 0 or yp <0 or xp <0:
-                        #                             print("got here")
-                        #                             print(xp)
-
                         if xp < b_cols and xp >= 0:
                             val = self.cal_dist(ay, ax, yp, xp)
                             if val < dbest:
@@ -226,7 +187,7 @@ class PatchMatch(object):
                             if ymin > ymax:
                                 ry = -np.random.randint(ymax, ymin)
 
-                            if xmin <= xmax: 
+                            if xmin <= xmax:
                                 rx = np.random.randint(xmin, xmax)
                             if ymin <= ymax:
                                 ry = np.random.randint(ymin, ymax)
@@ -250,5 +211,5 @@ class PatchMatch(object):
 
                     ax += xchange
                 ay += ychange
-            print("done iteration {}".format(it + 1))
-        print("Done")
+            print("Done iteration {}".format(it + 1))
+        print("Done All Iterations")
