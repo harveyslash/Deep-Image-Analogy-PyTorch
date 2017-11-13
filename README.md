@@ -1,7 +1,18 @@
 Deep-Image-Analogy
 ==============================
 
-Unofficial,PyTorch version of Deep Image Analogy.https://arxiv.org/abs/1705.01088. This project focuses on documentation of the project , and simplifying the structure. A blog post on it is coming soon. 
+Unofficial,PyTorch version of Deep Image Analogy.https://arxiv.org/abs/1705.01088. 
+This project focuses on documentation of the project , and simplifying the structure.
+A blog post on it is coming soon. 
+
+## This Project uses python3.6 and Cuda
+
+### To Install Dependencies: 
+be in the root directory and run `pip install -r requirements.txt` 
+
+### To run project:
+cd into src , and run `python Deep-Img-Analogy.py INPUT_IMG_A INPUT_IMG_BB OUTPUT_IMG` 
+
 
 Project Organization
 ------------
@@ -17,12 +28,9 @@ Project Organization
     ├── requirements.txt <-- Project requirements. 
     └── src
         ├── Deep-Img-Analogy.py <-- End to end executable with command line interface.
-        ├── __init__.py
         ├── models
-        │   ├── __init__.py
         │   └── VGG19.py <-- modified VGG19 with support for deconvolution, and other things. 
         ├── PatchMatch
-        │   ├── __init__.py
         │   └── PatchMatchOrig.py <-- CPU version of PatchMatch. GPU version may come in the future.
         ├── Utils.py <-- Helper Utilities
         └── WLS.py <-- Weighted Least Squares.
