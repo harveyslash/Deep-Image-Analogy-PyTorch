@@ -1,38 +1,33 @@
 Deep-Image-Analogy
 ==============================
 
-A short description of the project.
+Unofficial,PyTorch version of Deep Image Analogy.https://arxiv.org/abs/1705.01088. This project focuses on documentation of the project , and simplifying the structure. A blog post on it is coming soon. 
 
 
 Project Organization
 ------------
-
-    ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
-    ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump
-    │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   │
-    │   └── models         <- Scripts to train models and then use trained models to make
-    │                       prediction
-    │   
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.testrun.org
-
+├── data
+│   ├── outputs <-- folder to store outputs
+│   └── raw <-- folder to store inputs
+├── LICENSE.md
+├── notebooks
+│   ├── Deep Image Analogy.ipynb Full Pipeline in a step by step manner
+│   ├── PatchMatch-Demo.ipynb Raw Patchmatch demo
+│   └── WLS.ipynb Weighted Least Squares Implementation Demo (currently not being used by this project)
+├── README.md 
+├── requirements.txt <-- Project requirements. 
+└── src
+    ├── Deep-Img-Analogy.py <-- End to end executable with command line interface. 
+    ├── __init__.py
+    ├── models
+    │   ├── __init__.py
+    │   └── VGG19.py <-- modified VGG19 with support for deconvolution, and other things. 
+    ├── PatchMatch
+    │   ├── __init__.py
+    │   └── PatchMatchOrig.py <-- CPU version of PatchMatch. GPU version may come in the future.
+    ├── Utils.py <-- Helper Utilities
+    └── WLS.py <-- Weighted Least Squares.
+ 
 
 --------
 
