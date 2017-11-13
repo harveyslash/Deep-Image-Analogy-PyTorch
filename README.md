@@ -1,7 +1,17 @@
 Deep-Image-Analogy
 ==============================
 
-Unofficial,PyTorch version of Deep Image Analogy.https://arxiv.org/abs/1705.01088. This project focuses on documentation of the project , and simplifying the structure. A blog post on it is coming soon. 
+Unofficial,PyTorch version of Deep Image Analogy.https://arxiv.org/abs/1705.01088. 
+This project focuses on documentation of the project , and simplifying the structure.
+A blog post on it is coming soon. 
+
+## This Project uses python3.6 and Cuda
+
+### To Install Dependencies: 
+be in the root directory and run `pip install -r requirements.txt` 
+
+### To run project:
+cd into src , and run `python Deep-Img-Analogy.py INPUT_IMG_A INPUT_IMG_BB OUTPUT_IMG` 
 
 
 Project Organization
