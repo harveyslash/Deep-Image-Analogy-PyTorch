@@ -13,6 +13,8 @@ be in the root directory and run `pip install -r requirements.txt`
 ### To run project:
 cd into src , and run `python Deep-Img-Analogy.py INPUT_IMG_A INPUT_IMG_BB OUTPUT_IMG` 
 
+## Note 
+This project uses Adam as optimizer instead of LBFGS. LBFGS was giving really poor results. 
 
 Project Organization
 ------------
