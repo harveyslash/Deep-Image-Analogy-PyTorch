@@ -10,6 +10,9 @@ A blog post on it is coming soon.
 ### To Install Dependencies: 
 be in the root directory and run `pip install -r requirements.txt` 
 
+### To See Step by Step working of Project : 
+Run the Deep Image Analogy.ipynb file in the notebooks folder (using jupyter)
+
 ### To run project:
 cd into src , and run `python Deep-Img-Analogy.py INPUT_IMG_A INPUT_IMG_BB OUTPUT_IMG` 
 
