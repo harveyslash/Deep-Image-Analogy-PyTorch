@@ -36,7 +36,7 @@ class FeatureExtractor(nn.Sequential):
 
 
 class VGG19:
-    def __init__(self):
+    def __init__(self,use_cuda=True):
         self.cnn_temp = models.vgg19(pretrained=True).features
         self.model = FeatureExtractor()  # the new Feature extractor module network
         conv_counter = 1
@@ -44,6 +44,7 @@ class VGG19:
         batn_counter = 1
 
         block_counter = 1
+        self.use_cuda = use_cuda
 
         for i, layer in enumerate(list(self.cnn_temp)):
 
@@ -68,6 +69,10 @@ class VGG19:
                 batn_counter += 1
                 self.model.add_layer(name, layer)  # ***
 
+        if use_cuda:
+            self.model.cuda()
+            
+
     def forward_subnet(self, input_tensor, start_layer, end_layer):
         for i, layer in enumerate(list(self.model)):
             if i >= start_layer and i <= end_layer:
@@ -75,14 +80,13 @@ class VGG19:
         return input_tensor
 
     def get_features(self, img_tensor):
+        if self.use_cuda:
+            img_tensor = img_tensor.cuda()
 
         features = self.model(img_tensor)
-        features = [i.data.squeeze().numpy().transpose(1,2,0) for i in features]
+        features = [i.data.squeeze().cpu().numpy().transpose(1,2,0) for i in features]
         return np.array(features)
 
-        feature = self.model(img_tensor)[layer_num].data
-        return feature.squeeze().numpy().transpose(1, 2, 0)
-    
     def get_deconvoluted_feat(self,feat,feat_layer_num,iters=13):
         
         def cn_last(th_array):
@@ -92,7 +96,7 @@ class VGG19:
             return th_array.transpose(2,0,1)
 
         feat = cn_first(feat)
-        feat = torch.from_numpy(feat)
+        feat = torch.from_numpy(feat).float()
         scale = 1
 
         if feat_layer_num == 5:
@@ -110,16 +114,17 @@ class VGG19:
         else:
             print("Invalid layer number")
         # noise = Variable(torch.from_numpy(noise).float()) # use this if you want custom noise 
-        noise = Variable(torch.randn(noise.shape).float())
-        noise = noise.cuda()
-        noise = nn.Parameter(noise.data)
-        optimizer = optim.Adam([noise],lr=1)
+        noise = torch.randn(noise.shape).float()
 
-        if not next(self.model.parameters()).is_cuda:
-            self.model = self.model.cuda()
+        
+        if self.use_cuda:
+            noise = noise.cuda()
+            feat = feat.cuda()
 
-        feat = Variable(feat).cuda()
-        loss = nn.MSELoss(size_average=False)
+        noise = Variable(noise,requires_grad=True)
+        feat = Variable(feat)
+        optimizer = optim.Adamax([noise],lr=1,eps=1,weight_decay=1)
+
         loss_hist = []
         for i in range(1,iters):
             optimizer.zero_grad()
@@ -130,14 +135,16 @@ class VGG19:
             loss_value = norm**2
 
             loss_value.backward()
+            noise.data.clamp_(0., 1.)
             optimizer.step()
 
-            noise.data.clamp_(0., 1.)
             loss_hist.append(loss_value.cpu().data.numpy())
 
         # plt.plot(loss_hist)
         # plt.show()
 
+
+        noise.data.clamp_(0., 1.)
         noise_cpu = noise.cpu().data.squeeze().numpy()
         del feat 
         del noise
