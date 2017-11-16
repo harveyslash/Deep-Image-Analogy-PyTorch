@@ -62,7 +62,7 @@ class VGG19:
                 name = "pool_" + str(block_counter) + "__" + str(i)
                 batn_counter = relu_counter = conv_counter = 1
                 block_counter += 1
-                self.model.add_layer(name, nn.MaxPool2d((2,2)))  # ***
+                self.model.add_layer(name, nn.AvgPool2d((2,2)))  # ***
 
             if isinstance(layer, nn.BatchNorm2d):
                 name = "batn_" + str(block_counter) + "_" + str(batn_counter) + "__" + str(i)
@@ -135,8 +135,8 @@ class VGG19:
             loss_value = norm**2
 
             loss_value.backward()
-            noise.data.clamp_(0., 1.)
             optimizer.step()
+            noise.data.clamp_(0., 1.)
 
             loss_hist.append(loss_value.cpu().data.numpy())
 
