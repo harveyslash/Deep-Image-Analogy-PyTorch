@@ -8,3 +8,5 @@ torchvision==0.1.9
 jupyter==1.0.0
 opencv-python==3.2.0.8
 matplotlib==2.0.2
+click==6.7
+scipy==0.19.1

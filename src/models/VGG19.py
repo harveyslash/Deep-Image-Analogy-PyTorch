@@ -64,6 +64,7 @@ class VGG19:
                 block_counter += 1
                 self.model.add_layer(name, nn.AvgPool2d((2,2)))  # ***
 
+
             if isinstance(layer, nn.BatchNorm2d):
                 name = "batn_" + str(block_counter) + "_" + str(batn_counter) + "__" + str(i)
                 batn_counter += 1
@@ -123,7 +124,7 @@ class VGG19:
 
         noise = Variable(noise,requires_grad=True)
         feat = Variable(feat)
-        optimizer = optim.Adamax([noise],lr=1,eps=1,weight_decay=1)
+        optimizer = optim.Adamax([noise],lr=1,eps=.1,weight_decay=0.1)
 
         loss_hist = []
         for i in range(1,iters):

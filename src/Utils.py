@@ -50,13 +50,3 @@ def get_viz_tensor(activations_tensor):
     return grid
 
 
-def reconstruct_image(img_a, pm):
-    final_img = np.zeros_like(img_a)
-    size = pm.nnf.shape[0]
-    scale = img_a.shape[0] // pm.nnf.shape[0]
-    for i in range(size):
-        for j in range(size):
-            x, y = pm.nnf[i, j]
-            if final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)].shape == img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)].shape:
-                final_img[scale * i:scale * (i + 1), scale * j:scale * (j + 1)] = img_a[scale * y:scale * (y + 1), scale * x:scale * (x + 1)]
-    return final_img

@@ -104,7 +104,7 @@ class PatchMatch(object):
                         lookups[ay, ax] = img[y, x]
 
                 if lookups.size > 0:
-                    value = np.average(lookups, axis=(0, 1))
+                    value = np.mean(lookups, axis=(0, 1))
                     final[i, j] = value
 
         return final
@@ -154,7 +154,7 @@ class PatchMatch(object):
 
         return img
 
-    def propagate(self, iters=2, rand_search_radius=200):
+    def propagate(self, iters=2, rand_search_radius=200,queue=None):
         """
         Optimize the NNF using PatchMatch Algorithm
         :param iters: number of iterations
@@ -252,3 +252,6 @@ class PatchMatch(object):
                 ay += ychange
             print("Done iteration {}".format(it + 1))
         print("Done All Iterations")
+        if queue:
+            queue.put(self.nnf)
+
