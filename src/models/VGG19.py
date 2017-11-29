@@ -124,7 +124,7 @@ class VGG19:
 
         noise = Variable(noise,requires_grad=True)
         feat = Variable(feat)
-        optimizer = optim.Adamax([noise],lr=1,eps=.1,weight_decay=0.1)
+        optimizer = optim.Adam([noise],lr=1)
 
         loss_hist = []
         for i in range(1,iters):
