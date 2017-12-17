@@ -1,0 +1,3 @@
+[submodule "src/PatchMatch"]
+	path = src/PatchMatch
+	url = https://github.com/harveyslash/PatchMatch
